@@ -1,0 +1,20 @@
+#Disabled / Inactive Accounts
+Get-LocalUser | Where-Object { $_.Enabled -eq $false -or $_.LastLogon -lt (Get-Date).AddDays(-90) } |
+Select Name, Enabled, LastLogon
+
+#Check for Password Never Expires
+Get-LocalUser | Where-Object { $_.PasswordNeverExpires -eq $true } | Select Name, PasswordNeverExpires
+
+#Local Admin Accounts Audit
+Get-LocalGroupMember -Group "Administrators" | Select-Object Name, ObjectClass
+
+# summmarized check
+$securityReport = [PSCustomObject]@{
+    Hostname = $env:COMPUTERNAME
+    AdminUsers = (Get-LocalGroupMember "Administrators").Name -join ", "
+    RDP_Enabled = ((Get-ItemProperty "HKLM:\System\CurrentControlSet\Control\Terminal Server").fDenyTSConnections -eq 0)
+    OpenShares = (Get-SmbShare | Where-Object { $_.Name -ne "IPC$" }).Name -join ", "
+    AV_Product = (Get-CimInstance -Namespace root\SecurityCenter2 -ClassName AntivirusProduct).displayName -join ", "
+    Updates_Installed = (Get-HotFix | Measure-Object).Count
+}
+$securityReport | Format-List
