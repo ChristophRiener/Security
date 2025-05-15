@@ -1,0 +1,8 @@
+$report = @{
+    Hostname = $env:COMPUTERNAME
+    IP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -notlike "*Loopback*"}).IPAddress
+    Uptime = ((Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime)
+    DiskSpace = (Get-PSDrive -PSProvider FileSystem | Select-Object Name, Free, Used)
+    Users = (Get-LocalUser | Select-Object Name, Enabled)
+}
+$report
